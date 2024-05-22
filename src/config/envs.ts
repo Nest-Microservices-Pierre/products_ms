@@ -2,9 +2,10 @@ import 'dotenv/config';
 import * as joi from 'joi';
 
 interface envConfig {
-  TRANSPORT: any;
   PORT: number;
   DATABASE_URL: string;
+  TRANSPORT: any;
+  NATS_SERVERS: string[];
 }
 
 const envsSchema: joi.ObjectSchema = joi
@@ -12,10 +13,14 @@ const envsSchema: joi.ObjectSchema = joi
     PORT: joi.number().required().default(3000),
     DATABASE_URL: joi.string().required(),
     TRANSPORT: joi.string().required(),
+    NATS_SERVERS: joi.array().items(joi.string()).required(),
   })
   .unknown(true);
 
-const { error, value } = envsSchema.validate(process.env);
+const { error, value } = envsSchema.validate({
+  ...process.env,
+  NATS_SERVERS: process.env.NATS_SERVERS?.split(','),
+});
 
 if (error) {
   throw new Error(`Config validation error: ${error.message}`);
@@ -27,4 +32,5 @@ export const envs = {
   port: envConfig.PORT,
   baseUrl: envConfig.DATABASE_URL,
   transport: envConfig.TRANSPORT,
+  natsServers: envConfig.NATS_SERVERS,
 };
